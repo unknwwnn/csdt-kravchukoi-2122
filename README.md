@@ -8,3 +8,5 @@ Student Number: 15
 HW Interface: I2C
 Game: Tetris
 Data driven format: Binary
+
+Git Tag version: 1.0
