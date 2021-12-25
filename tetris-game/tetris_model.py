@@ -123,7 +123,9 @@ class BoardData(object):
         else:
             self.mergePiece()
             lines = self.removeFullLines()
-            self.createNewPiece()
+            result = self.createNewPiece()
+            if not result:
+                lines = -1
         return lines
 
     def dropDown(self):
