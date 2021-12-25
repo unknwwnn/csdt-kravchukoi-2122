@@ -1,30 +1,14 @@
 import sys, random
 from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication, QHBoxLayout, QLabel
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QPainter, QColor, QIcon
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit
-from pymongo import MongoClient
-import pymongo
+from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal
+from PyQt5.QtGui import QPainter, QColor
 
 from tetris_model import BOARD_DATA, Shape
 
-#Create connection with DB and insert the result of the current player
-def insertResult(playerName, score):
-    connection = 'mongodb+srv://kravchukoicsdt:csdt@cluster0.qj7r5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-    cluster = MongoClient(connection)
-
-    db = cluster["csdt-tetris-db"]
-    collection = db["results"]
-
-    res = {"name" : playerName, "score:" : score}
-
-    collection.insert_one(res)
-
 
 class Tetris(QMainWindow):
-    def __init__(self, name):
+    def __init__(self):
         super().__init__()
-        self.playerName = name
         self.isStarted = False
         self.isPaused = False
         self.nextMove = None
@@ -34,7 +18,7 @@ class Tetris(QMainWindow):
 
     def initUI(self):
         self.gridSize = 22
-        self.speed = 150
+        self.speed = 100
 
         self.timer = QBasicTimer()
         self.setFocusPolicy(Qt.StrongFocus)
@@ -63,7 +47,6 @@ class Tetris(QMainWindow):
         size = self.geometry()
         self.move((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2)
 
-
     def start(self):
         if self.isPaused:
             return
@@ -90,11 +73,6 @@ class Tetris(QMainWindow):
             self.timer.start(self.speed, self)
 
         self.updateWindow()
-    
-    def gameOver(self):
-        self.timer.stop()
-        self.tboard.msg2Statusbar.emit("Game over. Score: " + str(self.tboard.score))
-        insertResult(self.playerName, self.tboard.score)
 
     def updateWindow(self):
         self.tboard.updateData()
@@ -117,14 +95,11 @@ class Tetris(QMainWindow):
                     k += 1
             # lines = BOARD_DATA.dropDown()
             lines = BOARD_DATA.moveDown()
-            if (lines == -1):
-                self.gameOver()
-            else: 
-                self.tboard.score += lines
-                if self.lastShape != BOARD_DATA.currentShape:
-                    self.nextMove = None
-                    self.lastShape = BOARD_DATA.currentShape
-                self.updateWindow()
+            self.tboard.score += lines
+            if self.lastShape != BOARD_DATA.currentShape:
+                self.nextMove = None
+                self.lastShape = BOARD_DATA.currentShape
+            self.updateWindow()
         else:
             super(Tetris, self).timerEvent(event)
 
@@ -233,3 +208,10 @@ class Board(QFrame):
     def updateData(self):
         self.msg2Statusbar.emit(str(self.score))
         self.update()
+
+
+if __name__ == '__main__':
+    # random.seed(32)
+    app = QApplication([])
+    tetris = Tetris()
+    sys.exit(app.exec_())
