@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import pymongo
 
 from tetris_model import BOARD_DATA, Shape
+from tetris_ai import TETRIS_AI
 
 #Create connection with DB and insert the result of the current player
 def insertResult(playerName, score):
@@ -22,16 +23,23 @@ def insertResult(playerName, score):
 
 
 class Tetris(QMainWindow):
-    def __init__(self, name):
+    def __init__(self, name, isPlayedByAI):
         super().__init__()
         self.playerName = name
         self.isStarted = False
         self.isPaused = False
         self.nextMove = None
         self.lastShape = Shape.shapeNone
+        self.playedByAI = False
+
+        if(isPlayedByAI):
+            self.playedByAI = True
+
+
+       
 
         self.initUI()
-
+    
     def initUI(self):
         self.gridSize = 22
         self.speed = 150
@@ -103,6 +111,8 @@ class Tetris(QMainWindow):
 
     def timerEvent(self, event):
         if event.timerId() == self.timer.timerId():
+            if TETRIS_AI and not self.nextMove and self.playedByAI:
+                self.nextMove = TETRIS_AI.nextMove()
             if self.nextMove:
                 k = 0
                 while BOARD_DATA.currentDirection != self.nextMove[0] and k < 4:
